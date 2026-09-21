@@ -37,6 +37,9 @@ T getInfo(const IdType id, const InfoType infoType)
 	{
 		T platformDeviceInfo(InfoSize, 0);
 		OCL_SAFE_CALL(Func(id, infoType, InfoSize, platformDeviceInfo.data(), nullptr));
+		if (!platformDeviceInfo.empty() && platformDeviceInfo.back() == '\0') {
+			platformDeviceInfo.pop_back();
+		}
 		return platformDeviceInfo;
 	}
 	else
