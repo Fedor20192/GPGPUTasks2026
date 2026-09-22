@@ -93,13 +93,7 @@ void run(int argc, char** argv)
         std::vector<double> times;
         for (int iter = 0; iter < 10; ++iter) {
             timer t;
-
-            // Настраиваем размер рабочего пространства (n) и размер рабочих групп в этом рабочем пространстве (GROUP_SIZE=256)
-            // Обратите внимание что сейчас указана рабочая группа размера 1х1 в рабочем пространстве width x height, это не то что вы хотите
             gpu::WorkSize workSize(32, 8, width, height);
-
-            // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
-            // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
             ocl_aplusb_matrix_good.exec(workSize, a_gpu, b_gpu, c_gpu, width, height);
 
             times.push_back(t.elapsed());
@@ -110,7 +104,6 @@ void run(int argc, char** argv)
         std::vector<unsigned int> cs(width * height, 0);
         c_gpu.readN(cs.data(), width * height);
 
-        // Сверяем результат
         for (size_t i = 0; i < width * height; ++i) {
             rassert(cs[i] == as[i] + bs[i], 321418230421312512, cs[i], as[i] + bs[i], i);
         }
