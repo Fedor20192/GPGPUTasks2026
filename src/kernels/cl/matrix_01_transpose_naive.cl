@@ -17,5 +17,4 @@ __kernel void matrix_01_transpose_naive(
         return;
     }
     transposed_matrix[x * h + y] = matrix[y * w + x];
-
 }

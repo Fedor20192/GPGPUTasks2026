@@ -20,7 +20,7 @@ __kernel void matrix_02_transpose_coalesced_via_local_memory(
     const unsigned base_x = x - dx;
     const unsigned base_y = y - dy;
 
-    __local float chunk[GROUP_SIZE_X][GROUP_SIZE_Y];
+    __local float chunk[GROUP_SIZE_X][GROUP_SIZE_Y + 1];
     const unsigned int local_index = dy * GROUP_SIZE_X + dx;
     const unsigned int global_index = y * w + x;
 
