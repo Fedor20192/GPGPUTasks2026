@@ -65,26 +65,37 @@ void run(int argc, char** argv)
     }
 
     // Аллоцируем буферы в VRAM
-    gpu::gpu_mem_32u input_gpu(n), buffer1_pow2_sum_gpu(n), buffer2_pow2_sum_gpu(n), prefix_sum_accum_gpu(n);
-
+    gpu::gpu_mem_32u input_gpu(n), prefix_sum_accum_gpu(n);
     // Прогружаем входные данные по PCI-E шине: CPU RAM -> GPU VRAM
     input_gpu.writeN(as.data(), n);
+    std::vector buffers { prefix_sum_accum_gpu };
+    for (unsigned int now_n = n; now_n > 1;) {
+        now_n = (now_n + 1) / 2;
+        buffers.emplace_back(now_n);
+    }
 
     // Запускаем кернел (несколько раз и с замером времени выполнения)
     std::vector<double> times;
     for (int iter = 0; iter < 10; ++iter) {
         timer t;
 
-        // Запускаем кернел, с указанием размера рабочего пространства и передачей всех аргументов
-        // Если хотите - можете удалить ветвление здесь и оставить только тот код который соответствует вашему выбору API
-        ocl_fill_with_zeros.exec(gpu::WorkSize(GROUP_SIZE, n), prefix_sum_accum_gpu, n);
+        input_gpu.copyToN(buffers[0], n);
+        for (size_t i = 1; i < buffers.size(); ++i) {
+            const unsigned int now_n = buffers[i - 1].number();
+            ocl_sum_reduction.exec(
+                gpu::WorkSize(GROUP_SIZE, (now_n + 1) / 2),
+                buffers[i - 1],
+                buffers[i],
+                now_n);
+        }
 
-        input_gpu.copyToN(buffer1_pow2_sum_gpu, n);
-        for (unsigned int pow = 1, now_n = n; now_n > 1; pow *= 2) {
-            ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, pow);
-            ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, (now_n + 1) / 2), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, now_n);
-            now_n = (now_n + 1) / 2;
-            std::swap(buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu);
+        for (size_t i = buffers.size() - 1; i > 0; --i) {
+            const unsigned int now_n = buffers[i - 1].number();
+            ocl_prefix_accumulation.exec(
+                gpu::WorkSize(GROUP_SIZE, now_n),
+                buffers[i - 1],
+                buffers[i],
+                now_n);
         }
 
         times.push_back(t.elapsed());
