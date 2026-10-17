@@ -80,7 +80,7 @@ void run(int argc, char** argv)
         ocl_fill_with_zeros.exec(gpu::WorkSize(GROUP_SIZE, n), prefix_sum_accum_gpu, n);
 
         input_gpu.copyToN(buffer1_pow2_sum_gpu, n);
-        for (unsigned int i = 0, pow = 1, now_n = n; i < sizeof(unsigned int) * CHAR_BIT; i++, pow *= 2) {
+        for (unsigned int pow = 1, now_n = n; now_n > 1; pow *= 2) {
             ocl_prefix_accumulation.exec(gpu::WorkSize(GROUP_SIZE, n), buffer1_pow2_sum_gpu, prefix_sum_accum_gpu, n, pow);
             ocl_sum_reduction.exec(gpu::WorkSize(GROUP_SIZE, (now_n + 1) / 2), buffer1_pow2_sum_gpu, buffer2_pow2_sum_gpu, now_n);
             now_n = (now_n + 1) / 2;
