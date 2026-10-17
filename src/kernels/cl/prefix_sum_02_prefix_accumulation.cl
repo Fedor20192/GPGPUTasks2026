@@ -21,5 +21,7 @@ __kernel void prefix_sum_02_prefix_accumulation(
 
     const unsigned int start = ind - (ind & (pow2 - 1));
 
-    prefix_sum_accum[ind - 1] += pow2_sum[start / pow2 - 1] * ((ind & pow2) != 0);
+    if (ind & pow2) {
+        prefix_sum_accum[ind - 1] += pow2_sum[start / pow2 - 1];
+    }
 }
