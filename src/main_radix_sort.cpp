@@ -99,7 +99,7 @@ void run(int argc, char** argv)
         std::cout << "CPU std::sort effective RAM bandwidth: " << memory_size_gb / elapsed << " GB/s (" << n / 1e6 / elapsed << " uint millions/s)" << std::endl;
     }
 
-    constexpr unsigned int workgroups_cnt = 512;
+    constexpr unsigned int workgroups_cnt = 2048;
     constexpr unsigned int workgroups_count_array_size = workgroups_cnt * RADIX_NUM_MASK;
     const unsigned int elems_per_group = (n + workgroups_cnt - 1) / workgroups_cnt;
 
